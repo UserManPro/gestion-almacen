@@ -1564,7 +1564,7 @@ async function loadStoreAccess(){
   if(!data?.join_code || !data?.join_password)throw new Error("No se han encontrado las credenciales de acceso de esta tienda.");
   state.storeAccess={code:data.join_code,password:data.join_password};
 }
-const PUBLIC_APP_URL="https://usermanpro.github.io/VentaVapers/";
+const PUBLIC_APP_URL="https://usermanpro.github.io/gestion-almacen/";
 function buildPublicStoreUrl(storeId){
   return PUBLIC_APP_URL+"#/tienda/"+encodeURIComponent(storeId);
 }
