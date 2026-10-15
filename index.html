@@ -291,6 +291,9 @@
 @media(max-width:700px){.help-grid{grid-template-columns:1fr}}
 
     .product-field-editor-help{padding:12px 14px;border:1px solid rgba(124,92,255,.3);background:rgba(124,92,255,.07);border-radius:12px;color:var(--muted);font-size:12px;line-height:1.5}
+
+    .cash-box-card{cursor:pointer;transition:transform .15s ease,border-color .15s ease}.cash-box-card:hover{transform:translateY(-2px);border-color:#7c5cff88}.cash-box-card .cash-history-hint{font-size:11px;color:var(--muted);margin-top:10px}
+    .customer-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}.customer-list{display:grid;gap:8px}.customer-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:13px;border:1px solid var(--line);border-radius:13px;background:#ffffff04;align-items:center}.customer-row strong{display:block}.customer-row .meta{margin-top:4px}.customer-rank{font-weight:900;color:#c8c0ff;white-space:nowrap}.customer-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -635,6 +638,10 @@ Stock ↓</option>
           <div class="field"><label>Cantidad</label><input id="movementQty" type="number" min="1" step="1" value="1"></div>
           <div class="field"><label>Caja donde entra el dinero</label><select id="movementCashBox"></select><p class="hint compact-hint">El importe de la operación se sumará automáticamente a esta caja.</p></div>
         </div>
+        <div class="row">
+          <div class="field"><label>Descuento (opcional)</label><div class="copy-row"><input id="movementDiscount" type="number" min="0" step="0.01" placeholder="Sin descuento"><select id="movementDiscountType" aria-label="Tipo de descuento" style="max-width:115px"><option value="amount">€</option><option value="percent">%</option></select></div><p class="hint compact-hint">Déjalo vacío si no hay descuento.</p></div>
+          <div class="field"><label>Cliente (opcional)</label><div class="copy-row"><select id="movementCustomer"><option value="">Venta sin cliente</option></select><button class="btn" id="newCustomerFromSale" type="button">＋ Cliente</button></div></div>
+        </div>
         <div class="field"><label>Total de la operación</label><div id="movementTotal" class="product-info" style="min-height:48px;display:flex;align-items:center"><strong>0,00 €</strong></div></div>
         <div class="field"><label>Nota</label><input id="movementNote" placeholder="Motivo o referencia (opcional)"></div>
         <label class="public-filter-option" style="padding:11px 12px;margin:4px 0 12px;border:1px solid var(--line);background:#ffffff04;border-radius:12px">
@@ -683,6 +690,7 @@ Stock ↓</option>
 
     <section id="employeesPage" class="hidden"><div class="hero"><div><h1>Empleados</h1><p>Gestiona los miembros y sus permisos.</p></div></div><div class="card"><div id="employeesList" class="products"></div></div></section>
 <section id="cashPage" class="hidden"><div class="hero"><div><h1>Cajas</h1><p>Control de cajas de efectivo de la tienda.</p></div><button class="btn primary owner-only" id="newCashBoxBtn">＋ Caja</button></div><div class="grid" id="cashSummary"></div><div class="section card"><div class="section-head"><h2>Cajas</h2></div><div id="cashBoxesList" class="admin-grid"></div></div></section>
+<section id="customersPage" class="hidden"><div class="hero"><div><h1>Clientes</h1><p>Consulta tus mejores compradores y gestiona los clientes registrados.</p></div><button class="btn primary" id="newCustomerBtn" type="button">＋ Nuevo cliente</button></div><div class="customer-tabs"><button class="btn primary" id="customerRankingTab" type="button">🏆 Ranking de mejores compradores</button><button class="btn" id="customerDirectoryTab" type="button">👥 Clientes dados de alta</button></div><div id="customerSummary" class="grid"></div><div class="section card"><div class="customer-toolbar"><h2 id="customerSectionTitle" style="margin:0">Ranking de mejores compradores</h2><input id="customerSearch" class="search" style="max-width:320px" placeholder="Buscar cliente..."></div><div id="customersList" class="customer-list"></div></div></section>
 <section id="debtsPage" class="hidden"><div class="hero"><div><h1>Deudas</h1><p>Registra y controla deudas pendientes.</p></div><button class="btn primary owner-only" id="newDebtBtn">＋ Deuda</button></div><div class="grid"><div class="card stat"><span>Deudas pendientes</span><b id="debtTotal">0,00 €</b></div><div class="card stat"><span>Número de deudas</span><b id="debtCount">0</b></div></div><div class="section card"><div class="table-wrap"><table class="table"><thead><tr><th>Nombre</th><th>Importe</th><th>Inicio</th><th>Estado</th><th></th></tr></thead><tbody id="debtsBody"></tbody></table></div></div></section>
 <section id="expensesPage" class="hidden"><div class="hero"><div><h1>Gastos</h1><p>Registra manualmente compras y otros gastos de la tienda.</p></div><button class="btn primary owner-only" id="newExpenseBtn">＋ Gasto</button></div><div class="grid" id="expenseSummary"></div><div class="section card"><div class="section-head"><h2>Gastos registrados</h2></div><div class="table-wrap"><table class="table"><thead><tr><th>Fecha</th><th>Concepto</th><th>Importe</th><th>Nota</th><th></th></tr></thead><tbody id="expensesBody"></tbody></table></div></div></section>
 <section id="warehousesPage" class="hidden"><div class="hero"><div><h1>Almacenes</h1><p>Gestiona los almacenes de la tienda y consulta sus existencias.</p></div><button class="btn primary owner-only" id="newWarehouseBtn">＋ Almacén</button></div><div class="grid" id="warehouseSummary"></div><div class="section card"><div class="section-head"><h2>Almacenes</h2></div><div id="warehousesCards" class="admin-grid"></div></div></section>
@@ -711,7 +719,7 @@ Stock ↓</option>
     <button data-page="inventoryPage"><span class="ico">▦</span>Inventario</button>
     <button data-page="salesPage"><span class="ico">€</span>Ventas</button><button data-page="statsPage"><span class="ico">▥</span>Estadísticas</button><button data-page="reservationsPage"><span class="ico">▢</span>Reservados</button>
     <button data-page="restockPage" class="owner-only-nav"><span class="ico">＋</span>Reponer</button>
-    <button data-page="historyPage"><span class="ico">◷</span>Historial</button><button data-page="expensesPage" class="owner-only-nav"><span class="ico">↘</span>Gastos</button><button data-page="warehousesPage"><span class="ico">▣</span>Almacenes</button><button data-page="employeesPage" class="owner-only-nav"><span class="ico">👥</span>Empleados</button><button data-page="cashPage"><span class="ico">€</span>Cajas</button><button data-page="debtsPage" class="owner-only-nav"><span class="ico">💳</span>Deudas</button>
+    <button data-page="historyPage"><span class="ico">◷</span>Historial</button><button data-page="expensesPage" class="owner-only-nav"><span class="ico">↘</span>Gastos</button><button data-page="warehousesPage"><span class="ico">▣</span>Almacenes</button><button data-page="employeesPage" class="owner-only-nav"><span class="ico">👥</span>Empleados</button><button data-page="cashPage"><span class="ico">€</span>Cajas</button><button data-page="customersPage"><span class="ico">♙</span>Clientes</button><button data-page="debtsPage" class="owner-only-nav"><span class="ico">💳</span>Deudas</button>
   </div></nav>
 </div>
 
@@ -862,6 +870,8 @@ Stock ↓</option>
 <div id="cashMovementModal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h3>Movimiento de caja</h3><button class="close" id="closeCashMovementModal">✕</button></div><form id="cashMovementForm"><input id="cashMovementBox" type="hidden"><div class="field"><label>Tipo</label><select id="cashMovementType"><option value="in">Entrada</option><option value="out">Salida</option></select></div><div class="field"><label>Importe</label><input id="cashMovementAmount" type="number" min="0.01" step="0.01" required></div><div class="field"><label>Nota</label><input id="cashMovementNote" maxlength="200"></div><button class="btn primary" type="submit">Guardar movimiento</button></form></div></div>
 <div id="warehouseModal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h3>Nuevo almacén</h3><button class="close" id="closeWarehouseModal">✕</button></div><form id="warehouseForm"><div class="field"><label>Nombre del almacén</label><input id="warehouseName" required maxlength="80" placeholder="Ej. Almacén principal"></div><div class="field"><label>Ubicación / nota</label><input id="warehouseLocation" maxlength="160" placeholder="Opcional"></div><button class="btn primary" type="submit">Crear almacén</button></form></div></div>
 <div id="warehouseDetailModal" class="modal hidden"><div class="modal-box modal-wide"><div class="modal-head"><div><h3 id="warehouseDetailTitle">Almacén</h3><p id="warehouseDetailMeta" class="hint" style="margin:4px 0 0"></p></div><button class="close" id="closeWarehouseDetailModal" type="button">✕</button></div><div id="warehouseDetailBody"></div></div></div>
+<div id="customerModal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h3 id="customerModalTitle">Nuevo cliente</h3><button class="close" id="closeCustomerModal" type="button">✕</button></div><form id="customerForm"><input id="customerId" type="hidden"><div class="field"><label>Nombre *</label><input id="customerName" required maxlength="120" autocomplete="name" placeholder="Nombre del cliente"></div><div class="field"><label>Teléfono (opcional)</label><input id="customerPhone" type="tel" maxlength="40" autocomplete="tel" placeholder="Teléfono"></div><div class="field"><label>Instagram (opcional)</label><input id="customerInstagram" maxlength="100" placeholder="@usuario"></div><div class="field"><label>Correo electrónico (opcional)</label><input id="customerEmail" type="email" maxlength="160" autocomplete="email" placeholder="correo@ejemplo.com"></div><button class="btn primary" type="submit">Guardar cliente</button></form></div></div>
+<div id="cashHistoryModal" class="modal hidden"><div class="modal-box modal-wide"><div class="modal-head"><div><h3 id="cashHistoryTitle">Historial de caja</h3><p id="cashHistoryMeta" class="hint" style="margin:4px 0 0"></p></div><button class="close" id="closeCashHistoryModal" type="button">✕</button></div><div class="table-wrap"><table class="table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Importe</th><th>Usuario</th><th>Concepto</th></tr></thead><tbody id="cashHistoryBody"></tbody></table></div></div></div>
 <div id="debtModal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h3>Nueva deuda</h3><button class="close" id="closeDebtModal">✕</button></div><form id="debtForm"><div class="field"><label>Nombre</label><input id="debtName" required maxlength="100"></div><div class="field"><label>Dinero</label><input id="debtAmount" type="number" min="0.01" step="0.01" required></div><div class="field"><label>Fecha de inicio</label><input id="debtStartDate" type="date" required></div><button class="btn primary" type="submit">Añadir deuda</button></form></div></div>
 <div id="saleDebtModal" class="modal hidden"><div class="modal-box">
   <div class="modal-head"><div><h3>Datos de la deuda</h3><p class="hint" style="margin:4px 0 0">La venta descontará el stock, pero el dinero no entrará en ninguna caja hasta cobrar la deuda.</p></div><button class="close" id="closeSaleDebtModal" type="button">✕</button></div>
@@ -919,7 +929,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 
-let state={user:null,profile:null,store:null,storeRole:null,storeAccess:null,isAdmin:false,stores:[],warehouses:[],products:[],stock:[],movements:[],activity:[],sales:[],productImages:[],cashBoxes:[],debts:[],expenses:[],reservations:[],productFields:[],productFieldOptions:{},productAttributeValues:{},userProfiles:{},inventoryFilters:{brand:"",category:"",stock:"",sort:"priceAsc"},historyFilter:"all",statsCategory:"",statsLimit:10,adminUsers:[],adminStores:[],adminResetTarget:null,adminFeedback:[]};
+let state={user:null,profile:null,store:null,storeRole:null,storeAccess:null,isAdmin:false,stores:[],warehouses:[],products:[],stock:[],movements:[],activity:[],sales:[],productImages:[],cashBoxes:[],customers:[],customerTab:"ranking",debts:[],expenses:[],reservations:[],productFields:[],productFieldOptions:{},productAttributeValues:{},userProfiles:{},inventoryFilters:{brand:"",category:"",stock:"",sort:"priceAsc"},historyFilter:"all",statsCategory:"",statsLimit:10,adminUsers:[],adminStores:[],adminResetTarget:null,adminFeedback:[]};
 let editingProductId=null;
 let editingProductFieldId=null;
 let pendingSaleDebt=null;
@@ -1199,23 +1209,25 @@ function dynamicValueByName(attributes, name){
 async function loadData(){
   if(!state.store)return;
   const sid=state.store.id;
-  const [w,p,s,m,a,sv,cm,pi,cb,dbt,ex,pf]=await Promise.all([
+  const [w,p,s,m,a,sv,cm,pi,cb,dbt,ex,cu,pf]=await Promise.all([
     db.from("warehouses").select("*").eq("store_id",sid).order("created_at"),
     db.from("products").select("*").eq("store_id",sid).order("brand"),
     // stock se relaciona con la tienda mediante warehouse_id; no tiene store_id.
     db.from("stock").select("*"),
     db.from("stock_movements").select("*").eq("store_id",sid).order("created_at",{ascending:false}).limit(100),
     db.from("inventory_activity").select("*").eq("store_id",sid).order("created_at",{ascending:false}).limit(150),
-    db.from("inventory_sales").select("id,product_id,warehouse_id,quantity,unit_price,created_at,note,user_id").eq("store_id",sid).order("created_at",{ascending:false}),
-    db.from("cash_box_movements").select("*").eq("store_id",sid).order("created_at",{ascending:false}).limit(150),
+    db.from("inventory_sales").select("id,product_id,warehouse_id,quantity,unit_price,total_amount,discount_amount,discount_type,customer_id,created_at,note,user_id").eq("store_id",sid).order("created_at",{ascending:false}),
+    db.from("cash_box_movements").select("*").eq("store_id",sid).order("created_at",{ascending:false}),
     db.from("product_images").select("product_id,image_url").eq("store_id",sid),
     db.from("cash_boxes").select("*").eq("store_id",sid).order("created_at"),
     db.from("debts").select("*").eq("store_id",sid).order("created_at",{ascending:false}),
     db.from("expenses").select("*").eq("store_id",sid).order("created_at",{ascending:false}),
+    db.from("customers").select("*").eq("store_id",sid).order("name"),
     db.rpc("get_product_fields",{p_store_id:sid})
   ]);
   for(const r of [w,p,s,m,a,sv,cm,pi,cb,dbt,ex,pf])if(r.error)throw r.error;
-  state.warehouses=w.data||[];state.products=p.data||[];state.stock=s.data||[];state.movements=m.data||[];state.activity=a.data||[];state.sales=sv.data||[];state.cashMovements=cm.data||[];state.productImages=pi.data||[];state.cashBoxes=cb.data||[];state.debts=dbt.data||[];state.expenses=ex.data||[];
+  state.warehouses=w.data||[];state.products=p.data||[];state.stock=s.data||[];state.movements=m.data||[];state.activity=a.data||[];state.sales=sv.data||[];state.cashMovements=cm.data||[];state.productImages=pi.data||[];state.cashBoxes=cb.data||[];state.debts=dbt.data||[];state.expenses=ex.data||[];state.customers=cu.data||[];
+  if(cu.error)throw cu.error;
   state.productFields=pf.data||[];
   if(isOwner()){
     await removeDuplicateBasicProductFields(sid);
@@ -1252,7 +1264,7 @@ function render(){
   $("statWarehouses").textContent=state.warehouses.length;
   renderPuffStockSummary();
   populateInventoryFilters();$("productsGrid").innerHTML=filteredProducts().map(p=>productCard(p,qtyFor(p.id))).join("")||`<div class="empty">No hay productos que coincidan.</div>`;
-  fillSelectors();renderMovements();renderEmployees();renderCashBoxes();renderDebts();renderWarehousesPage();renderExpenses();renderReservations();renderStats();applyRoleUI();applyLanguage();
+  fillSelectors();renderMovements();renderEmployees();renderCashBoxes();renderCustomers();renderDebts();renderWarehousesPage();renderExpenses();renderReservations();renderStats();applyRoleUI();applyLanguage();
 }
 function renderPuffStockSummary(){
   const box=$("dashPuffSummary");if(!box)return;
@@ -1328,6 +1340,7 @@ function fillSelectors(){
   $("movementWarehouse").innerHTML=warehouseOptions().map(w=>`<option value="${esc(w.id)}">${esc(warehouseDisplayName(w))}</option>`).join("");
   const currentCashBox=$("movementCashBox").value;
   $("movementCashBox").innerHTML=state.cashBoxes.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${money(c.balance)}</option>`).join("");
+  if($("movementCustomer")){const currentCustomer=$("movementCustomer").value;$("movementCustomer").innerHTML='<option value="">Venta sin cliente</option>'+state.customers.slice().sort((a,b)=>a.name.localeCompare(b.name,"es",{sensitivity:"base"})).map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");if(state.customers.some(c=>c.id===currentCustomer))$("movementCustomer").value=currentCustomer;}
   if(currentCashBox && state.cashBoxes.some(c=>c.id===currentCashBox)) $("movementCashBox").value=currentCashBox;
   fillCashBoxSelect("expenseCashBox",true,$("expenseCashBox")?.value||"");
   fillCashBoxSelect("debtPaymentCashBox",false,$("debtPaymentCashBox")?.value||"");
@@ -1491,7 +1504,45 @@ async function openEmployeeHistory(userId,displayName){
   $("employeeHistoryBody").innerHTML=rows.map(x=>{const p=state.products.find(q=>q.id===x.product_id),w=state.warehouses.find(q=>q.id===x.warehouse_id);return `<tr><td>${date(x.created_at)}</td><td>${esc(p?.flavor||x.product_id||"—")}</td><td>${esc(w?.name||"—")}</td><td>${esc(x.activity_type||x.movement_type||"Operación")}</td><td>${Number(x.quantity||0)}</td><td>${esc(x.note||"—")}</td></tr>`;}).join("")||'<tr><td colspan="6" class="empty">Este empleado todavía no tiene movimientos registrados.</td></tr>';
 }
 
-function renderCashBoxes(){const box=$("cashBoxesList");if(!box)return;const total=state.cashBoxes.reduce((a,x)=>a+Number(x.balance||0),0);$("cashSummary").innerHTML=`<div class="card stat"><span>Cajas</span><b>${state.cashBoxes.length}</b></div><div class="card stat"><span>Total</span><b>${money(total)}</b></div>`;box.innerHTML=state.cashBoxes.map(c=>`<article class="card"><div class="cash-card"><div><h3 style="margin:0 0 5px">${esc(c.name)}</h3><div class="meta">Saldo actual</div></div><div class="cash-balance">${money(c.balance)}</div></div>${isOwner()?`<button class="btn" data-cash-movement="${esc(c.id)}" style="margin-top:14px">＋ Movimiento</button>`:''}</article>`).join("")||'<div class="empty">No hay cajas creadas.</div>'; }
+
+function customerRanking(){
+  const totals=new Map();
+  for(const sale of state.sales){if(!sale.customer_id)continue;const x=totals.get(sale.customer_id)||{spent:0,units:0,sales:0};x.spent+=Number(sale.total_amount??(Number(sale.unit_price||0)*Number(sale.quantity||0)));x.units+=Number(sale.quantity||0);x.sales++;totals.set(sale.customer_id,x);}
+  return state.customers.map(c=>({customer:c,...(totals.get(c.id)||{spent:0,units:0,sales:0})})).sort((a,b)=>b.spent-a.spent||b.units-a.units||a.customer.name.localeCompare(b.customer.name,"es",{sensitivity:"base"}));
+}
+function renderCustomers(){
+  const list=$("customersList");if(!list)return;
+  const ranked=customerRanking(),rankMap=new Map(ranked.map((x,i)=>[x.customer.id,i+1]));
+  const tab=state.customerTab||"ranking";const query=($("customerSearch")?.value||"").trim().toLocaleLowerCase("es");
+  $("customerRankingTab")?.classList.toggle("primary",tab==="ranking");$("customerDirectoryTab")?.classList.toggle("primary",tab==="directory");
+  $("customerSectionTitle").textContent=tab==="ranking"?"Ranking de mejores compradores":"Clientes dados de alta";
+  $("customerSummary").innerHTML=`<div class="card stat"><span>Clientes registrados</span><b>${state.customers.length}</b></div><div class="card stat"><span>Compradores con ventas</span><b>${ranked.filter(x=>x.sales>0).length}</b></div><div class="card stat"><span>Importe asociado a clientes</span><b>${money(ranked.reduce((a,x)=>a+x.spent,0))}</b></div>`;
+  let rows=tab==="ranking"?ranked:ranked.slice().sort((a,b)=>a.customer.name.localeCompare(b.customer.name,"es",{sensitivity:"base"}));
+  rows=rows.filter(x=>[x.customer.name,x.customer.phone,x.customer.instagram,x.customer.email].some(v=>String(v||"").toLocaleLowerCase("es").includes(query)));
+  list.innerHTML=rows.map(x=>`<div class="customer-row"><div><strong>${esc(x.customer.name)}</strong><div class="meta">${[x.customer.phone,x.customer.instagram,x.customer.email].filter(Boolean).map(esc).join(" · ")||"Sin datos de contacto"}<br>${x.units} productos/unidades · ${x.sales} ventas · ${money(x.spent)} gastados</div></div><div class="customer-rank">#${rankMap.get(x.customer.id)||"—"}</div></div>`).join("")||'<div class="empty">No hay clientes que mostrar.</div>';
+}
+async function saveCustomerFromForm(){
+  const id=$("customerId").value;const payload={store_id:state.store.id,name:$("customerName").value.trim(),phone:$("customerPhone").value.trim()||null,instagram:$("customerInstagram").value.trim()||null,email:$("customerEmail").value.trim()||null};
+  if(!payload.name)return toast("El nombre del cliente es obligatorio.",true);
+  const fromSale=$("customerModal").dataset.fromSale==="1";
+  let result=id?await db.from("customers").update({name:payload.name,phone:payload.phone,instagram:payload.instagram,email:payload.email}).eq("id",id).eq("store_id",state.store.id):await db.from("customers").insert(payload).select("id").single();
+  if(result.error)return toast(errorText(result.error),true);
+  $("customerModal").classList.add("hidden");await refreshStoreData(true);renderCustomers();if(fromSale&&result.data?.id&&$("movementCustomer"))$("movementCustomer").value=result.data.id;toast(id?"Cliente actualizado.":"Cliente registrado.");
+}
+function openCustomerModal(customer=null,fromSale=false){
+  $("customerModal").dataset.fromSale=fromSale?"1":"0";
+  $("customerForm").reset();$("customerId").value=customer?.id||"";$("customerModalTitle").textContent=customer?"Editar cliente":"Nuevo cliente";
+  $("customerName").value=customer?.name||"";$("customerPhone").value=customer?.phone||"";$("customerInstagram").value=customer?.instagram||"";$("customerEmail").value=customer?.email||"";$("customerModal").classList.remove("hidden");
+}
+function openCashHistory(cashBoxId){
+  const c=state.cashBoxes.find(x=>x.id===cashBoxId);if(!c)return;
+  const rows=state.cashMovements.filter(m=>m.cash_box_id===cashBoxId).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $("cashHistoryTitle").textContent=`Historial · ${c.name}`;$("cashHistoryMeta").textContent=`Saldo actual: ${money(c.balance)} · ${rows.length} movimientos`;
+  $("cashHistoryBody").innerHTML=rows.map(m=>`<tr><td>${date(m.created_at)}</td><td>${m.movement_type==="out"?"Salida":"Entrada"}</td><td>${money((m.movement_type==="out"?-1:1)*Number(m.amount||0))}</td><td>${esc(historyUser(m.user_id))}</td><td>${esc(m.note||"Sin concepto")}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Esta caja todavía no tiene movimientos.</td></tr>';
+  $("cashHistoryModal").classList.remove("hidden");
+}
+
+function renderCashBoxes(){const box=$("cashBoxesList");if(!box)return;const total=state.cashBoxes.reduce((a,x)=>a+Number(x.balance||0),0);$("cashSummary").innerHTML=`<div class="card stat"><span>Cajas</span><b>${state.cashBoxes.length}</b></div><div class="card stat"><span>Total</span><b>${money(total)}</b></div>`;box.innerHTML=state.cashBoxes.map(c=>`<article class="card cash-box-card" data-open-cash-history="${esc(c.id)}" tabindex="0" role="button" aria-label="Ver historial de ${esc(c.name)}"><div class="cash-card"><div><h3 style="margin:0 0 5px">${esc(c.name)}</h3><div class="meta">Saldo actual</div></div><div class="cash-balance">${money(c.balance)}</div></div><div class="cash-history-hint">Pulsa para consultar el historial ↗</div>${isOwner()?`<button class="btn" data-cash-movement="${esc(c.id)}" style="margin-top:14px">＋ Movimiento</button>`:''}</article>`).join("")||'<div class="empty">No hay cajas creadas.</div>'; }
 function renderWarehousesPage(){const box=$("warehousesCards");if(!box)return;const totalUnits=state.warehouses.reduce((sum,w)=>sum+state.products.reduce((s,p)=>s+qtyFor(p.id,w.id),0),0);$("warehouseSummary").innerHTML=`<div class="card stat"><span>Almacenes</span><b>${state.warehouses.length}</b></div><div class="card stat"><span>Unidades almacenadas</span><b>${totalUnits}</b></div>`;box.innerHTML=state.warehouses.map(w=>{const units=state.products.reduce((sum,p)=>sum+qtyFor(p.id,w.id),0);const products=state.products.filter(p=>qtyFor(p.id,w.id)>0).length;return `<button type="button" class="card" data-open-warehouse="${esc(w.id)}" style="text-align:left;cursor:pointer;width:100%;color:inherit"><div class="cash-card"><div><h3 style="margin:0 0 5px">${esc(w.name||"Sin nombre")}</h3><div class="meta">${esc(w.location||"Sin ubicación indicada")}</div></div><div class="cash-balance">${units}</div></div><div class="meta" style="margin-top:10px">${products} producto${products===1?"":"s"} con stock · Pulsa para ver existencias</div></button>`;}).join("")||'<div class="empty">No hay almacenes creados.</div>'; }
 function renderWarehouseDetail(id){const w=state.warehouses.find(x=>x.id===id);if(!w)return;const rows=state.products.map(p=>{const qty=qtyFor(p.id,w.id);if(qty<=0)return null;const img=imageFor(p.id);return `<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px"><div style="width:58px;height:58px;border-radius:10px;overflow:hidden;background:#080b12;display:grid;place-items:center;flex:0 0 58px">${img?`<img src="${esc(img)}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'noimg',textContent:'Sin foto'}))">`:'<span class="noimg">Sin foto</span>'}</div><div style="min-width:0;flex:1"><strong>${esc(p.flavor||'Producto')}</strong><div class="meta">${esc(p.brand||'')} · Categoría: ${esc(p.category||'Sin categoría')} · ID ${esc(p.barcode||'—')}</div></div><strong style="font-size:20px">${qty}</strong></div>`;}).filter(Boolean).join('');const total=state.products.reduce((sum,p)=>sum+qtyFor(p.id,w.id),0);$("warehouseDetailTitle").textContent=warehouseDisplayName(w);$("warehouseDetailMeta").textContent=`${w.location||"Sin ubicación indicada"} · ${total} unidades`;$("warehouseDetailBody").innerHTML=rows||'<div class="empty">Este almacén no tiene productos con stock.</div>';$('warehouseDetailModal').classList.remove('hidden');}
 function renderDebts(){
@@ -1514,7 +1565,7 @@ function renderExpenses(){
 }
 function showPage(id){
   if(!isOwner() && ["restockPage","expensesPage","employeesPage","debtsPage"].includes(id)) return;
-  ["dashboardPage","inventoryPage","salesPage","statsPage","reservationsPage","restockPage","historyPage","expensesPage","warehousesPage","employeesPage","cashPage","debtsPage"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
+  ["dashboardPage","inventoryPage","salesPage","statsPage","reservationsPage","restockPage","historyPage","expensesPage","warehousesPage","employeesPage","cashPage","customersPage","debtsPage"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
   document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -1635,6 +1686,7 @@ $("completeReservationForm").onsubmit=async e=>{
   toast("Reservado firmado y cobrado.");
   await refreshStoreData(true);
 };
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-open-cash-history]")){e.preventDefault();openCashHistory(e.target.dataset.openCashHistory);}});
 document.addEventListener("click",async e=>{const sell=e.target.closest("[data-sell-product]");if(sell){goSellProduct(sell.dataset.sellProduct);return;}const prod=e.target.closest("[data-open-product]");if(prod&&!e.target.closest(".product-actions")){renderProductDetail(prod.dataset.openProduct);return;}const cr=e.target.closest("[data-complete-reservation]");if(cr){const r=state.reservations.find(x=>x.id===cr.dataset.completeReservation);if(!r)return;const p=state.products.find(x=>x.id===r.product_id);$("completeReservationId").value=r.id;$("completeReservationPendingDebt").checked=false;$("completeReservationMeta").textContent=`${p?.flavor||"Producto"} · ${r.quantity} uds. · ${money(Number(p?.price||0)*Number(r.quantity||0))}`;$("completeReservationCashBox").innerHTML=state.cashBoxes.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${money(c.balance)}</option>`).join("");$("completeReservationModal").classList.remove("hidden");return;}const ca=e.target.closest("[data-cancel-reservation]");if(ca){if(!confirm("¿Cancelar este reservado y devolver el stock al almacén?"))return;const {error}=await db.rpc("cancel_reservation",{p_reservation_id:ca.dataset.cancelReservation});if(error)return toast(errorText(error),true);toast("Apartado cancelado y stock devuelto.");await refreshStoreData(true);return;}});
 $("closeProductDetailModal").onclick=()=>$("productDetailModal").classList.add("hidden");
 $("productDetailModal").addEventListener("click",e=>{if(e.target===$("productDetailModal"))$("productDetailModal").classList.add("hidden")});
@@ -2464,7 +2516,7 @@ function updateSaleDebtStatus(){
 function openSaleDebtModal(){
   const product=state.products.find(p=>p.id===$("movementProduct").value);
   const qty=Math.max(1,Number($("movementQty").value)||1);
-  const total=Number(product?.price||0)*qty;
+  const total=calculateSaleAmounts().total;
   $("saleDebtName").value=pendingSaleDebt?.name||"";
   $("saleDebtAmount").value=pendingSaleDebt?.amount>0?pendingSaleDebt.amount:total.toFixed(2);
   $("saleDebtStartDate").value=pendingSaleDebt?.startDate||new Date().toISOString().slice(0,10);
@@ -2482,17 +2534,26 @@ function goSellProduct(productId){
   updateMovementTotal();
   window.scrollTo({top:0,behavior:"smooth"});
 }
-function updateMovementTotal(){
+function calculateSaleAmounts(){
   const product=state.products.find(p=>p.id===$("movementProduct").value);
   const qty=Math.max(0,Number($("movementQty").value)||0);
-  const total=Number(product?.price||0)*qty;
-  $("movementTotal").innerHTML=`<strong>${money(total)}</strong><span style="margin-left:8px;color:var(--muted)">${money(Number(product?.price||0))} × ${qty||0}</span>`;
+  const subtotal=Math.round(Number(product?.price||0)*qty*100)/100;
+  const raw=Number($("movementDiscount")?.value||0);
+  const discountType=$("movementDiscountType")?.value||"amount";
+  const discount= Math.min(subtotal,Math.max(0,discountType==="percent"?subtotal*Math.min(raw,100)/100:raw));
+  return {product,qty,subtotal,discount:Math.round(discount*100)/100,total:Math.max(0,Math.round((subtotal-discount)*100)/100),discountType};
+}
+function updateMovementTotal(){
+  const a=calculateSaleAmounts();
+  $("movementTotal").innerHTML=`<div><strong>${money(a.total)}</strong><span style="margin-left:8px;color:var(--muted)">${money(a.subtotal)} subtotal${a.discount>0?` · descuento −${money(a.discount)}`:""}</span></div>`;
 }
 $("statsCategoryFilter")?.addEventListener("change",()=>{state.statsCategory=$("statsCategoryFilter").value;renderStats();});
 $("statsLimit")?.addEventListener("change",()=>{state.statsLimit=Number($("statsLimit").value)||10;renderStats();});
 $("refreshStatsBtn")?.addEventListener("click",async()=>{await refreshStoreData(true);showPage("statsPage");});
 
 $("movementQty").addEventListener("input",updateMovementTotal);
+$("movementDiscount")?.addEventListener("input",updateMovementTotal);
+$("movementDiscountType")?.addEventListener("change",updateMovementTotal);
 
 $("movementBtn").onclick=async()=>{
   if(!state.store)return toast("No hay tienda configurada.",true);
@@ -2503,19 +2564,23 @@ $("movementBtn").onclick=async()=>{
   if(!pending&&!cashBoxId)return toast("Selecciona la caja donde entra el dinero.",true);
   if(qty>qtyFor(pid,wid))return toast(`No hay stock suficiente en este almacén. Disponible: ${qtyFor(pid,wid)}.`,true);
   const product=state.products.find(p=>p.id===pid);
-  const total=Number(product?.price||0)*qty;
-  if(total<=0)return toast("El producto debe tener un precio mayor que 0.",true);
+  const amounts=calculateSaleAmounts();
+  const total=amounts.total;
+  if(amounts.subtotal<=0)return toast("El producto debe tener un precio mayor que 0.",true);
+  if(amounts.discount<0 || (amounts.discountType==="percent" && Number($("movementDiscount").value)>100))return toast("Revisa el descuento introducido.",true);
+  const customerId=$("movementCustomer").value||null;
   if(pending&&!pendingSaleDebt){openSaleDebtModal();return;}
   const args={
     p_store_id:state.store.id,p_warehouse_id:wid,p_product_id:pid,p_quantity:qty,
     p_cash_box_id:pending?null:cashBoxId,p_note:note||null,
     p_debt_name:pending?pendingSaleDebt.name:null,
     p_debt_amount:pending?Number(pendingSaleDebt.amount):null,
-    p_debt_start_date:pending?pendingSaleDebt.startDate:null
+    p_debt_start_date:pending?pendingSaleDebt.startDate:null,
+    p_discount:Number($("movementDiscount").value||0),p_discount_type:amounts.discountType,p_customer_id:customerId
   };
   const {error}=await db.rpc("register_inventory_sale_with_optional_debt",args);
   if(error){toast(errorText(error),true);return;}
-  $("movementQty").value=1;$("movementNote").value="";$("movementPendingDebt").checked=false;
+  $("movementQty").value=1;$("movementNote").value="";$("movementDiscount").value="";$("movementDiscountType").value="amount";$("movementCustomer").value="";$("movementPendingDebt").checked=false;
   pendingSaleDebt=null;updateSaleDebtStatus();
   toast(pending?`Venta registrada como pendiente de pago. ${money(args.p_debt_amount)} queda como deuda.`:`Venta registrada. ${money(total)} añadidos a la caja seleccionada.`);
   await refreshStoreData(true);updateMovementTotal();
@@ -2650,8 +2715,9 @@ $("productForm").onsubmit=async e=>{
 
 $("userChip").onclick=()=>$("profileMenu").classList.toggle("hidden");document.addEventListener("click",e=>{if(!e.target.closest("#userChip")&&!e.target.closest("#profileMenu"))$("profileMenu").classList.add("hidden");});$("menuEmployees").onclick=()=>{if(isOwner()){$("profileMenu").classList.add("hidden");showPage("employeesPage");}};$("appLogout").onclick=logout;
 $("closeWarehouseDetailModal").onclick=()=>$("warehouseDetailModal").classList.add("hidden");
+$("newCustomerBtn").onclick=()=>openCustomerModal();$("newCustomerFromSale").onclick=()=>openCustomerModal(null,true);$("closeCustomerModal").onclick=()=>$("customerModal").classList.add("hidden");$("customerForm").onsubmit=async e=>{e.preventDefault();await saveCustomerFromForm();};$("customerRankingTab").onclick=()=>{state.customerTab="ranking";renderCustomers();};$("customerDirectoryTab").onclick=()=>{state.customerTab="directory";renderCustomers();};$("customerSearch").oninput=renderCustomers;$("closeCashHistoryModal").onclick=()=>$("cashHistoryModal").classList.add("hidden");
 $("newCashBoxBtn").onclick=()=>{if(!isOwner())return;$("cashBoxForm").reset();$("cashBoxModal").classList.remove("hidden");};$("closeCashBoxModal").onclick=()=>$("cashBoxModal").classList.add("hidden");$("cashBoxForm").onsubmit=async e=>{e.preventDefault();const {error}=await db.rpc("create_cash_box",{p_store_id:state.store.id,p_name:$("cashBoxName").value.trim()});if(error)return toast(errorText(error),true);$("cashBoxModal").classList.add("hidden");toast("Caja creada.");await refreshStoreData(true);};$("closeCashMovementModal").onclick=()=>$("cashMovementModal").classList.add("hidden");$("cashMovementForm").onsubmit=async e=>{e.preventDefault();const {error}=await db.rpc("add_cash_box_movement",{p_cash_box_id:$("cashMovementBox").value,p_type:$("cashMovementType").value,p_amount:Number($("cashMovementAmount").value),p_note:$("cashMovementNote").value.trim()||null});if(error)return toast(errorText(error),true);$("cashMovementModal").classList.add("hidden");toast("Movimiento guardado.");await refreshStoreData(true);};$("newDebtBtn").onclick=()=>{if(!isOwner())return;$("debtForm").reset();$("debtStartDate").value=new Date().toISOString().slice(0,10);$("debtModal").classList.remove("hidden");};$("closeDebtModal").onclick=()=>$("debtModal").classList.add("hidden");$("debtForm").onsubmit=async e=>{e.preventDefault();const {error}=await db.rpc("create_debt",{p_store_id:state.store.id,p_name:$("debtName").value.trim(),p_amount:Number($("debtAmount").value),p_start_date:$("debtStartDate").value});if(error)return toast(errorText(error),true);$("debtModal").classList.add("hidden");toast("Deuda añadida.");await refreshStoreData(true);renderDebts();};$("newWarehouseBtn").onclick=()=>{if(!isOwner())return;$("warehouseForm").reset();$("warehouseModal").classList.remove("hidden");};$("closeWarehouseModal").onclick=()=>$("warehouseModal").classList.add("hidden");$("warehouseForm").onsubmit=async e=>{e.preventDefault();if(!isOwner())return;const name=$("warehouseName").value.trim(),location=$("warehouseLocation").value.trim();if(!name)return;const {error}=await db.rpc("create_warehouse",{p_store_id:state.store.id,p_name:name,p_location:location||null});if(error)return toast(errorText(error),true);$("warehouseModal").classList.add("hidden");toast("Almacén creado.");await refreshStoreData(true);};;$("newExpenseBtn").onclick=()=>{if(!isOwner())return;$("expenseForm").reset();$("expenseDate").value=new Date().toISOString().slice(0,10);fillCashBoxSelect("expenseCashBox",true);$("expenseModal").classList.remove("hidden")};$("closeExpenseModal").onclick=()=>$("expenseModal").classList.add("hidden");$("expenseForm").onsubmit=async e=>{e.preventDefault();if(!isOwner())return;const {error}=await db.rpc("create_expense",{p_store_id:state.store.id,p_name:$("expenseName").value.trim(),p_amount:Number($("expenseAmount").value),p_expense_date:$("expenseDate").value,p_cash_box_id:$("expenseCashBox").value||null,p_note:$("expenseNote").value.trim()||null});if(error)return toast(errorText(error),true);$("expenseModal").classList.add("hidden");toast("Gasto guardado.");await refreshStoreData(true);};$("closeDebtPaymentModal").onclick=()=>$("debtPaymentModal").classList.add("hidden");$("debtPaymentForm").onsubmit=async e=>{e.preventDefault();if(!isOwner())return;const debtId=$("debtPaymentId").value,cashBoxId=$("debtPaymentCashBox").value;if(!debtId||!cashBoxId)return toast("Selecciona una caja.",true);const {error}=await db.rpc("set_debt_status",{p_debt_id:debtId,p_status:"paid",p_cash_box_id:cashBoxId});if(error)return toast(errorText(error),true);$("debtPaymentModal").classList.add("hidden");toast("Deuda marcada como pagada y cobro registrado en la caja.");await refreshStoreData(true);};document.addEventListener("click",async e=>{
-  const togglePf=e.target.closest('[data-toggle-product-field]');if(togglePf){if(!isOwner())return;try{const id=togglePf.dataset.toggleProductField;const f=state.productFields.find(x=>x.id===id);if(!f)return;const r=await db.from('product_fields').update({is_active:!f.is_active,updated_at:new Date().toISOString()}).eq('id',id).eq('store_id',state.store.id);if(r.error)throw r.error;await loadProductFieldsOnly();renderProductFieldsManager();await renderDynamicProductFields(editingProductId);toast(f.is_active?'Campo desactivado.':'Campo activado.');}catch(err){toast(errorText(err),true);}return;}const deletePf=e.target.closest('[data-delete-product-field]');if(deletePf){if(!isOwner())return;if(!askDangerConfirmation('ELIMINAR',`Vas a eliminar el campo "${deletePf.dataset.deleteProductFieldName}" y sus valores guardados en los productos.`))return;try{const r=await db.from('product_fields').delete().eq('id',deletePf.dataset.deleteProductField).eq('store_id',state.store.id);if(r.error)throw r.error;await loadProductFieldsOnly();renderProductFieldsManager();await renderDynamicProductFields(editingProductId);toast('Campo eliminado.');}catch(err){toast(errorText(err),true);}return;}const wh=e.target.closest("[data-open-warehouse]");if(wh){renderWarehouseDetail(wh.dataset.openWarehouse);return;}const b=e.target.closest("[data-cash-movement]");if(b){$("cashMovementForm").reset();$("cashMovementBox").value=b.dataset.cashMovement;$("cashMovementModal").classList.remove("hidden");return;}const d=e.target.closest("[data-toggle-debt]");if(d){if(!isOwner())return;const nextStatus=d.dataset.currentStatus==='paid'?'pending':'paid';if(nextStatus==='paid'){
+  const togglePf=e.target.closest('[data-toggle-product-field]');if(togglePf){if(!isOwner())return;try{const id=togglePf.dataset.toggleProductField;const f=state.productFields.find(x=>x.id===id);if(!f)return;const r=await db.from('product_fields').update({is_active:!f.is_active,updated_at:new Date().toISOString()}).eq('id',id).eq('store_id',state.store.id);if(r.error)throw r.error;await loadProductFieldsOnly();renderProductFieldsManager();await renderDynamicProductFields(editingProductId);toast(f.is_active?'Campo desactivado.':'Campo activado.');}catch(err){toast(errorText(err),true);}return;}const deletePf=e.target.closest('[data-delete-product-field]');if(deletePf){if(!isOwner())return;if(!askDangerConfirmation('ELIMINAR',`Vas a eliminar el campo "${deletePf.dataset.deleteProductFieldName}" y sus valores guardados en los productos.`))return;try{const r=await db.from('product_fields').delete().eq('id',deletePf.dataset.deleteProductField).eq('store_id',state.store.id);if(r.error)throw r.error;await loadProductFieldsOnly();renderProductFieldsManager();await renderDynamicProductFields(editingProductId);toast('Campo eliminado.');}catch(err){toast(errorText(err),true);}return;}const wh=e.target.closest("[data-open-warehouse]");if(wh){renderWarehouseDetail(wh.dataset.openWarehouse);return;}const cashMovementButton=e.target.closest("[data-cash-movement]");if(cashMovementButton){e.stopPropagation();const b=cashMovementButton;$("cashMovementForm").reset();$("cashMovementBox").value=b.dataset.cashMovement;$("cashMovementModal").classList.remove("hidden");return;}const cashHistory=e.target.closest("[data-open-cash-history]");if(cashHistory){openCashHistory(cashHistory.dataset.openCashHistory);return;}const d=e.target.closest("[data-toggle-debt]");if(d){if(!isOwner())return;const nextStatus=d.dataset.currentStatus==='paid'?'pending':'paid';if(nextStatus==='paid'){
   const debt=state.debts.find(x=>x.id===d.dataset.toggleDebt);if(!debt)return;
   if(!state.cashBoxes.length)return toast("Primero crea al menos una caja para registrar el cobro.",true);
   $("debtPaymentId").value=debt.id;
